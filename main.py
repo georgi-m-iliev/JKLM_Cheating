@@ -28,7 +28,6 @@ class MyBrowser(WebBot):
             user_data_dir=None
         )
 
-        def_options.add_argument("--incognito")
         self.options = def_options
 
 
@@ -48,10 +47,11 @@ def get_word(syllable: str) -> str:
         WORDS_CACHE[syllable]["last"] = 0
     else:
         WORDS_CACHE[syllable]["last"] += 1
+
     return WORDS_CACHE[syllable]["words"][WORDS_CACHE[syllable]["last"]]
 
 
-def func(url: str):
+def spawn_browser(url: str):
     global bot
     bot = MyBrowser()
     bot.browse(url)
@@ -85,5 +85,4 @@ def func(url: str):
 
 
 if __name__ == '__main__':
-    url = input()
-    func(url)
+    spawn_browser(input())
