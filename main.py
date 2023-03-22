@@ -2,6 +2,9 @@ import time
 import requests
 import string
 import random
+import json
+
+import selenium.common.exceptions
 from botcity.web import WebBot, Browser
 from botcity.web.browsers.chrome import default_options
 from botcity.web import By
@@ -9,7 +12,9 @@ from botcity.web import By
 USER = "GOSHO"
 WORDS_CACHE = dict()
 USER_AGENT = {
-    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                  'AppleWebKit/537.36 (KHTML, like Gecko) '
+                  'Chrome/111.0.0.0 Safari/537.36'
 }
 
 
@@ -31,6 +36,26 @@ class MyBrowser(WebBot):
         self.options = def_options
 
 
+# Function for reading words from file
+def load_words(words: dict, path: str = 'dict.json'):
+    try:
+        file = open(file=path, encoding='utf-8')
+        words = json.load(file)
+        file.close()
+    except FileNotFoundError:
+        pass
+    except json.JSONDecodeError:
+        pass
+
+
+# # Function for saving words from file
+def save_words(words: dict, path: str = 'dict.json'):
+    file = open(file=path, encoding='utf-8', mode='w')
+    file.write(json.dumps(words))
+    file.close()
+
+
+# Function that returns unused word containing a syllable
 def get_word(syllable: str) -> str:
     if syllable not in WORDS_CACHE.keys():
         data = requests.get(
@@ -57,32 +82,55 @@ def spawn_browser(url: str):
     bot.browse(url)
     time.sleep(1)
     global USER
-    USER += id_generator(size=3)
+    # USER += id_generator(size=3)
     bot.kb_type(USER)
     bot.enter()
     time.sleep(1)
-    bot.add_image(label="join", path='./images/join.png')
-    if bot.find(label="join", matching=0.97, waiting_time=10000):
-        print("This element was found!")
-        bot.click_on(label="join")
 
     iframe = bot.find_element('/html/body/div[2]/div[4]/div[1]/iframe', By.XPATH)
     bot.enter_iframe(iframe)
     time.sleep(3)
 
+    clicked_join = False
+    winner_showed = False
     while True:
-        turn = bot.find_element('/html/body/div[2]/div[3]/div[2]/div[1]/span[1]', By.XPATH).text
-        if turn == "":
+        status = bot.find_element('/html/body/div[2]/div[1]/div/header', By.XPATH)
+        if status.location['x'] != 0 and status.location['y'] != 0 and clicked_join is False:
+            print("Status found!")
+            join = bot.find_element('/html/body/div[2]/div[3]/div[1]/div[1]/button', By.XPATH)
+            if join:
+                print("Join button found!!!!!")
+                try:
+                    join.click()
+                    clicked_join = True
+                    winner_showed = False
+                except selenium.common.exceptions.ElementNotInteractableException:
+                    pass
+        if winner_showed is False:
+            winner = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[3]/div/div[2]', By.XPATH)
+            if winner.location['x'] != 0 and winner.location['y'] != 0:
+                print("The winner is: " + winner.text)
+                winner_showed = True
+                continue
+        print("Waiting for turn")
+        turn = bot.find_element('/html/body/div[2]/div[3]/div[2]/div[1]/span[1]', By.XPATH)
+        if turn.location['x'] == 0 and turn.location['y'] == 0 and status.location['x'] == status.location['y'] == 0:
             syllable = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[2]/div', By.XPATH).text
             word = get_word(syllable)
-            print(word)
-            bot.kb_type(word)
+            print(word, sep=' ')
+            bot.kb_type(word, interval=random.randint(0, 10))
             bot.enter()
-        winner = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[3]/div/div[2]', By.XPATH).text
-        if winner != '':
-            break
+            clicked_join = False
         time.sleep(1)
 
 
+def main():
+    load_words(WORDS_CACHE)
+    try:
+        spawn_browser(input())
+    finally:
+        save_words(WORDS_CACHE)
+
+
 if __name__ == '__main__':
-    spawn_browser(input())
+    main()
