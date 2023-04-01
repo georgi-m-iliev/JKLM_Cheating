@@ -94,34 +94,37 @@ def spawn_browser(url: str):
     clicked_join = False
     winner_showed = False
     while True:
-        status = bot.find_element('/html/body/div[2]/div[1]/div/header', By.XPATH)
-        if status.location['x'] != 0 and status.location['y'] != 0 and clicked_join is False:
-            print("Status found!")
-            join = bot.find_element('/html/body/div[2]/div[3]/div[1]/div[1]/button', By.XPATH)
-            if join:
-                print("Join button found!!!!!")
-                try:
-                    join.click()
-                    clicked_join = True
-                    winner_showed = False
-                except selenium.common.exceptions.ElementNotInteractableException:
-                    pass
-        if winner_showed is False:
-            winner = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[3]/div/div[2]', By.XPATH)
-            if winner.location['x'] != 0 and winner.location['y'] != 0:
-                print("The winner is: " + winner.text)
-                winner_showed = True
-                continue
-        print("Waiting for turn")
-        turn = bot.find_element('/html/body/div[2]/div[3]/div[2]/div[1]/span[1]', By.XPATH)
-        if turn.location['x'] == 0 and turn.location['y'] == 0 and status.location['x'] == status.location['y'] == 0:
-            syllable = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[2]/div', By.XPATH).text
-            word = get_word(syllable)
-            print(word, sep=' ')
-            bot.kb_type(word, interval=random.randint(0, 10))
-            bot.enter()
-            clicked_join = False
-        time.sleep(1)
+        try:
+            status = bot.find_element('/html/body/div[2]/div[1]/div/header', By.XPATH)
+            if status.location['x'] != 0 and status.location['y'] != 0 and clicked_join is False:
+                print("Status found!")
+                join = bot.find_element('/html/body/div[2]/div[3]/div[1]/div[1]/button', By.XPATH)
+                if join:
+                    print("Join button found!!!!!")
+                    try:
+                        join.click()
+                        clicked_join = True
+                        winner_showed = False
+                    except selenium.common.exceptions.ElementNotInteractableException:
+                        pass
+            if winner_showed is False:
+                winner = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[3]/div/div[2]', By.XPATH)
+                if winner.location['x'] != 0 and winner.location['y'] != 0:
+                    print("The winner is: " + winner.text)
+                    winner_showed = True
+                    continue
+            print("Waiting for turn")
+            turn = bot.find_element('/html/body/div[2]/div[3]/div[2]/div[1]/span[1]', By.XPATH)
+            if turn.location['x'] == 0 and turn.location['y'] == 0 and status.location['x'] == status.location['y'] == 0:
+                syllable = bot.find_element('/html/body/div[2]/div[2]/div[2]/div[2]/div', By.XPATH).text
+                word = get_word(syllable)
+                print(word, sep=' ')
+                bot.kb_type(word, interval=random.randint(0, 10))
+                bot.enter()
+                clicked_join = False
+            time.sleep(1)
+        finally:
+            continue
 
 
 def main():
