@@ -11,6 +11,7 @@ from botcity.web import By
 
 USER = "GOSHO"
 WORDS_CACHE = dict()
+WORDS_USES = dict()
 USER_AGENT = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
                   'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -69,11 +70,13 @@ def get_word(syllable: str) -> str:
 
         WORDS_CACHE[syllable] = dict()
         WORDS_CACHE[syllable]["words"] = words
-        WORDS_CACHE[syllable]["last"] = 0
+        WORDS_USES[syllable] = 0
     else:
-        WORDS_CACHE[syllable]["last"] += 1
+        if syllable not in WORDS_USES.keys():
+            WORDS_USES[syllable] = 0
+    WORDS_USES[syllable] += 1
 
-    return WORDS_CACHE[syllable]["words"][WORDS_CACHE[syllable]["last"]]
+    return WORDS_CACHE[syllable]["words"][WORDS_USES[syllable] - 1]
 
 
 def spawn_browser(url: str):
